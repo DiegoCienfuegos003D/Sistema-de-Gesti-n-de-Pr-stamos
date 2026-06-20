@@ -292,6 +292,7 @@ export default function InteractiveApp({
                     }`}
                   />
                 </div>
+                <p className="text-[10px] text-[#A0AEC0] mt-0.5">Contraseña genérica para alumnos: <strong className="text-slate-650 font-mono">duoc2026</strong></p>
               </div>
 
               {loginError && (

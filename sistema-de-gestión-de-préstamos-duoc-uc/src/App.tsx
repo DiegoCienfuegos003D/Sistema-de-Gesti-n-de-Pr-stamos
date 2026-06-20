@@ -99,6 +99,26 @@ export default function App() {
     showNotification(`Estado de RUT ${rut} modificado a ${status}.`, 'success');
   };
 
+  const handleAddStudent = (student: Student): boolean => {
+    if (students.some(s => s.rut.trim() === student.rut.trim())) {
+      showNotification(`El RUT ${student.rut} ya está registrado.`, 'error');
+      return false;
+    }
+    setStudents(prev => [...prev, student]);
+    
+    // Automatically log in and transition the simulator to the home view
+    setCurrentStudent(student);
+    setLoginRut(student.rut);
+    setLoginPass('duoc2026');
+    setSelectedScreen('Home');
+    setLoginError('');
+    setShowEmptyRutHighlight(false);
+    setShowEmptyPassHighlight(false);
+    
+    showNotification(`Alumno ${student.name} ingresado con éxito y sesión iniciada de inmediato en la app móvil.`, 'success');
+    return true;
+  };
+
   // Item stock alteration from Admin interface
   const handleUpdateItemStock = (itemId: string, newStock: number) => {
     setItems(prev => prev.map(item => item.id === itemId ? { ...item, stock: newStock } : item));
@@ -418,6 +438,7 @@ export default function App() {
               students={students}
               onSelectStudent={handleSelectStudentFromQA}
               onUpdateStudentStatus={handleUpdateStudentStatus}
+              onAddStudent={handleAddStudent}
               items={items}
               onUpdateItemStock={handleUpdateItemStock}
               onResetDatabase={handleResetDatabase}

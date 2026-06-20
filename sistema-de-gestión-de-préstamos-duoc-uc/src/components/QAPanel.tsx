@@ -9,6 +9,7 @@ interface QAPanelProps {
   students: Student[];
   onSelectStudent: (student: Student) => void;
   onUpdateStudentStatus: (rut: string, status: any) => void;
+  onAddStudent: (student: Student) => boolean;
   items: Item[];
   onUpdateItemStock: (itemId: string, newStock: number) => void;
   onResetDatabase: () => void;
@@ -28,6 +29,7 @@ export default function QAPanel({
   students,
   onSelectStudent,
   onUpdateStudentStatus,
+  onAddStudent,
   items,
   onUpdateItemStock,
   onResetDatabase,
@@ -44,6 +46,45 @@ export default function QAPanel({
 }: QAPanelProps) {
   const [activeTab, setActiveTab] = useState<'tests' | 'students' | 'inventory' | 'bugs'>('tests');
   const [successRunMessage, setSuccessRunMessage] = useState<string | null>(null);
+
+  // States for registering new mock students
+  const [newStudentName, setNewStudentName] = useState('');
+  const [newStudentRut, setNewStudentRut] = useState('');
+  const [newStudentCareer, setNewStudentCareer] = useState('Técnico en Deportes');
+  const [newStudentStatus, setNewStudentStatus] = useState<'Normal' | 'Moroso' | 'Suspendido'>('Normal');
+  const [addStudentError, setAddStudentError] = useState('');
+
+  const submitNewStudent = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddStudentError('');
+
+    if (!newStudentName.trim()) {
+      setAddStudentError('Debe ingresar el nombre completo del alumno.');
+      return;
+    }
+    if (!newStudentRut.trim()) {
+      setAddStudentError('Debe ingresar un RUT válido.');
+      return;
+    }
+
+    // Basic RUT pattern check or format
+    const rutClean = newStudentRut.trim();
+
+    const success = onAddStudent({
+      rut: rutClean,
+      name: newStudentName.trim(),
+      career: newStudentCareer,
+      status: newStudentStatus,
+      email: `${newStudentName.toLowerCase().replace(/\s+/g, '.')}@duocuc.cl`,
+      activeLoansCount: 0
+    });
+
+    if (success) {
+      setNewStudentName('');
+      setNewStudentRut('');
+      setNewStudentStatus('Normal');
+    }
+  };
 
   const handleRunAndNotify = (id: string) => {
     onRunTestCase(id);
@@ -243,6 +284,95 @@ export default function QAPanel({
         {/* TAB 2: STUDENTS SIMULATOR CONTROL */}
         {activeTab === 'students' && (
           <div className="space-y-4" id="section-students">
+            
+            {/* NUEVO ALUMNO FORM (Solicitado por el usuario) */}
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3">
+              <div className="flex items-center space-x-2 border-b border-slate-105 pb-1.5">
+                <span className="p-0.5 px-1.5 bg-[#002F6C] text-[#FFA000] rounded font-mono font-bold text-xs">Añadir</span>
+                <h4 className="text-xs font-bold text-[#1A202C] uppercase tracking-wide">Ingresar Nuevo Alumno</h4>
+              </div>
+
+              <form onSubmit={submitNewStudent} className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-600 mb-0.5">Nombre Completo</label>
+                    <input
+                      id="input-new-student-name"
+                      type="text"
+                      placeholder="Ej: Juan Pérez Soler"
+                      value={newStudentName}
+                      onChange={(e) => setNewStudentName(e.target.value)}
+                      className="w-full text-xs p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#002F6C] bg-white text-[#1A202C]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-600 mb-0.5">RUT Alumno (para Inicio de Sesión)</label>
+                    <input
+                      id="input-new-student-rut"
+                      type="text"
+                      placeholder="Ej: 12.345.678-9"
+                      value={newStudentRut}
+                      onChange={(e) => setNewStudentRut(e.target.value)}
+                      className="w-full text-xs p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#002F6C] bg-white text-[#1A202C]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-600 mb-0.5">Carrera Duoc UC</label>
+                    <select
+                      id="select-new-student-career"
+                      value={newStudentCareer}
+                      onChange={(e) => setNewStudentCareer(e.target.value)}
+                      className="w-full text-xs p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#002F6C] bg-white text-[#1A202C]"
+                    >
+                      <option value="Técnico en Deportes">Técnico en Deportes</option>
+                      <option value="Ingeniería en Informática">Ingeniería en Informática</option>
+                      <option value="Animación Digital">Animación Digital</option>
+                      <option value="Diseño Gráfico">Diseño Gráfico</option>
+                      <option value="Administración de Empresas">Administración de Empresas</option>
+                      <option value="Construcción Civil">Construcción Civil</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-600 mb-0.5">Estado Financiero/Académico</label>
+                    <select
+                      id="select-new-student-status"
+                      value={newStudentStatus}
+                      onChange={(e) => setNewStudentStatus(e.target.value as any)}
+                      className="w-full text-xs p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#002F6C] bg-white text-[#1A202C]"
+                    >
+                      <option value="Normal">🟢 Normal (Sin deudas)</option>
+                      <option value="Moroso">🔴 Moroso (Bloqueo Deportes)</option>
+                      <option value="Suspendido">⚫ Suspendido (Sanción Fuerte)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {addStudentError && (
+                  <p className="text-[10px] text-red-650 font-bold bg-red-50 p-1.5 rounded border-l-2 border-red-500">
+                    ⚠️ {addStudentError}
+                  </p>
+                )}
+
+                <div className="flex justify-between items-center pt-1">
+                  <span className="text-[9px] text-[#A0AEC0]">
+                    Contraseña genérica: <strong className="text-slate-600 font-mono">duoc2026</strong>
+                  </span>
+                  <button
+                    id="btn-add-student-submit"
+                    type="submit"
+                    className="bg-[#002F6C] hover:bg-[#002554] text-[#FFA000] font-bold text-xs py-1.5 px-3 rounded-lg shadow transition-colors cursor-pointer"
+                  >
+                    Registrar e Iniciar
+                  </button>
+                </div>
+              </form>
+            </div>
+
             <div className="bg-[#F4F6F9] p-3 rounded-xl border border-slate-200 space-y-2">
               <div className="flex items-center space-x-2">
                 <Shield className="h-4 w-4 text-[#002F6C]" />
